@@ -3,7 +3,7 @@
 #include <iostream>
 
 Driver::Driver(const InputFile* input, const std::string& pname)
-    : problem_name(pname)
+: problem_name(pname)
 {
     int rank = -1;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -75,10 +75,16 @@ void Driver::run() {
         if(step % vis_frequency == 0 && vis_frequency != -1)
             writer->write(step, t_current);
         if(step % summary_frequency == 0 && summary_frequency != -1) {
+            // double start = MPI_Wtime();
             double temperature = local_mesh->getTotalTemperature();
+            double total;
+            MPI_Reduce(&temperature, &total, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
             if (rank == 0) {
-                std::cout << "+\tcurrent total temperature: " << temperature << std::endl;
+                // std::cout << "+\tcurrent total temperature: " << temperature << std::endl;
+                std::cout << "+\tcurrent total temperature: " << total << std::endl;
             }
+            // double end = MPI_Wtime();
+            // printf("time = %f\n", end - start);
         }
 
         step++;

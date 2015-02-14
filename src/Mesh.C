@@ -6,7 +6,7 @@
 #define POLY2(i, j, imin, jmin, ni) (((i) - (imin)) + ((j)-(jmin)) * (ni))
 
 Mesh::Mesh(const InputFile* input):
-    input(input)
+input(input)
 {
     allocated = false;
 
@@ -54,17 +54,17 @@ Mesh::Mesh(const InputFile* input):
 }
 
 Mesh::Mesh(MPI_Comm comm,
-        int x_min,
-        int y_min,
-        int x_max,
-        int y_max,
-        double xmin,
-        double xmax,
-        double ymin,
-        double ymax,
-        Mesh* global_mesh) :
-    comm(comm),
-    global_mesh(global_mesh)
+    int x_min,
+    int y_min,
+    int x_max,
+    int y_max,
+    double xmin,
+    double xmax,
+    double ymin,
+    double ymax,
+    Mesh* global_mesh) :
+comm(comm),
+global_mesh(global_mesh)
 {
     allocated = false;
 
@@ -167,12 +167,12 @@ Mesh* Mesh::partition()
         int cart_coords[2];
 
         MPI_Cart_create(
-                MPI_COMM_WORLD,
-                2,
-                dimensions,
-                periods,
-                0,
-                &cart_comm);
+            MPI_COMM_WORLD,
+            2,
+            dimensions,
+            periods,
+            0,
+            &cart_comm);
 
         int cart_rank;
         int rank;
@@ -187,6 +187,7 @@ Mesh* Mesh::partition()
 
         int xmin = min[0] + local_nx*cart_coords[0];
         int ymin = min[1] + local_ny*cart_coords[1];
+
         int xmax = min[0] + local_nx*(cart_coords[0]+1) - 1;
         int ymax = min[1] + local_ny*(cart_coords[1]+1) - 1;
 
@@ -196,7 +197,7 @@ Mesh* Mesh::partition()
         double ymx = min_coords[1] + dx[1]*(ymax);
 
         Mesh* mesh_partition = new Mesh(cart_comm, xmin, ymin, xmax, ymax,
-                                        xmn, xmx, ymn, ymx, this);
+            xmn, xmx, ymn, ymx, this);
 
         mesh_partition->allocate();
         return mesh_partition;
@@ -301,14 +302,47 @@ double Mesh::getTotalTemperature()
 
         int nx = n[0]+2;
 
+        // int my_rank;
+        // int p;
+        // int source;
+        // int tag = 0;
+        // int dest = 0;
+
+        // MPI_Status status;
+
+        // MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+        // MPI_Comm_size(MPI_COMM_WORLD, &p);
+
+        double start = MPI_Wtime();
+
         for(int k=y_min; k <= y_max; k++) {
             for(int j=x_min; j <= x_max; j++) {
 
                 int n1 = POLY2(j,k,x_min-1,y_min-1,nx);
 
                 temperature += u0[n1];
+
+                // MPI_Reduce(&u0[n1], &temperature, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+                // if(my_rank == 0)
+                // {
+                //     temperature = u0[n1];
+
+                //     for(source = 1; source < p; source++)
+                //     {
+                //         MPI_Recv(&u0[n1], 1, MPI_FLOAT, source, tag, MPI_COMM_WORLD, &status);
+
+                //         temperature = temperature + u0[n1];
+                //     }
+                // }
+                // else {
+                //     MPI_Send(&u0[n1], 1, MPI_FLOAT, dest, tag, MPI_COMM_WORLD);
+                // }
+
             }
         }
+
+        double end = MPI_Wtime();
+        // printf("time = %f\n", end - start);
 
         return temperature;
     } else {
